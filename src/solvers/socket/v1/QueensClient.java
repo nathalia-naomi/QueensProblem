@@ -1,11 +1,13 @@
 package solvers.socket.v1;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-class QueensClient {
+public class QueensClient {
     private int N;
     private String serverAddress;
     private int port;
@@ -25,7 +27,7 @@ class QueensClient {
             int initialRow = (int) in.readObject();
 
             // Resolve o subproblema
-            List<int[][]> solutions = solveNQueens(initialRow);
+            List<int[][]> solutions = solve(initialRow);
 
             // Envia a solução de volta para o servidor
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -39,16 +41,16 @@ class QueensClient {
         }
     }
 
-    private List<int[][]> solveNQueens(int initialRow) {
+    private List<int[][]> solve(int initialRow) {
         List<int[][]> solutions = new ArrayList<>();
         int[][] board = new int[N][N];
         board[initialRow][0] = 1;
 
-        solveNQueensUtil(board, 1, solutions);
+        solveQueens(board, 1, solutions);
         return solutions;
     }
 
-    private boolean solveNQueensUtil(int[][] board, int col, List<int[][]> solutions) {
+    private boolean solveQueens(int[][] board, int col, List<int[][]> solutions) {
         if (col >= N) {
             solutions.add(copyBoard(board));
             return true;
@@ -56,10 +58,10 @@ class QueensClient {
 
         boolean foundSolution = false;
         for (int i = 0; i < N; i++) {
-            if (isSafe(board, i, col)) {
+            if (isQueenSafe(board, i, col)) {
                 board[i][col] = 1;
 
-                foundSolution |= solveNQueensUtil(board, col + 1, solutions);
+                foundSolution |= solveQueens(board, col + 1, solutions);
 
                 board[i][col] = 0;
             }
@@ -67,7 +69,7 @@ class QueensClient {
         return foundSolution;
     }
 
-    private boolean isSafe(int[][] board, int row, int col) {
+    private boolean isQueenSafe(int[][] board, int row, int col) {
         for (int i = 0; i < col; i++)
             if (board[row][i] == 1)
                 return false;
@@ -91,7 +93,7 @@ class QueensClient {
     }
 
     public static void main(String[] args) {
-        int N = 8;  // Exemplo com 8 rainhas
+        int N = 8;  // Número de rainhas
         String serverAddress = "localhost";
         int port = 12345;
         QueensClient client = new QueensClient(N, serverAddress, port);

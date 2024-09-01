@@ -17,11 +17,11 @@ class QueensServer {
 
     public void startServer() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Servidor iniciado e aguardando conexões...");
+            System.out.printf("Server listening on port %s...%n", port);
 
             for (int i = 0; i < N; i++) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
+                System.out.println("Client connected: " + clientSocket.getInetAddress());
 
                 // Envia o subproblema para o cliente
                 ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());

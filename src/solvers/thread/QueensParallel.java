@@ -1,14 +1,20 @@
 package solvers.thread;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QueensParallel {
     private int N;
     private CountDownLatch latch; // ferramenta para calcular o tempo de execução
+    private int[][] solution;
+    private AtomicBoolean solutionFound;
 
     public QueensParallel(int N) {
         this.N = N;
         this.latch = new CountDownLatch(N); // inicializa o latch com tamanho N
+        this.solution = new int[N][N];
+        this.solutionFound = new AtomicBoolean(false);
     }
 
     // metodo define as threads para resolução do problema
@@ -19,19 +25,26 @@ public class QueensParallel {
         for (int i = 0; i < N; i++) {
             final int row = i;
             new Thread(() -> {
+                if (solutionFound.get()) {
+                    latch.countDown();
+                    return;
+                }
+
                 int[][] board = new int[N][N];
                 board[row][0] = 1;
 
                 if (solveQueens(board, 1)) {
-                    printSolution(board);
+                    if (solutionFound.compareAndSet(false, true)) {
+                        copyBoard(board, solution);
+                        printSolution(solution);
+                    }
                 }
-
                 latch.countDown(); // decrementa o latch ao terminar a thread
             }).start();
         }
 
         try {
-            latch.await(); // espera até que todas as threads terminem
+            latch.await(1, TimeUnit.MINUTES); // espera até que todas as threads terminem
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -41,7 +54,11 @@ public class QueensParallel {
     }
 
     // metodo para resolver o problema de N Rainhas usando backtracking
-    private boolean solveQueens(int board[][], int col) {
+    private boolean solveQueens(int[][] board, int col) {
+        if (solutionFound.get()) {
+            return true; // Se a solução foi encontrada, não continue
+        }
+
         if (col >= N) // verifica se todas as rainhas foram colocadas
             return true;
 
@@ -80,9 +97,17 @@ public class QueensParallel {
         return true;
     }
 
+    // copia o tabuleiro de origem para o tabuleiro de destino
+    private void copyBoard(int[][] source, int[][] destination) {
+        for (int i = 0; i < N; i++) {
+            System.arraycopy(source[i], 0, destination[i], 0, N);
+        }
+    }
+
     // imprime a solução encontrada de forma sincronizada
-    private void printSolution(int board[][]) {
+    private void printSolution(int[][] board) {
         synchronized (this) {
+            System.out.println("Solução encontrada:");
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
                     System.out.print(board[i][j] + " ");
@@ -94,7 +119,7 @@ public class QueensParallel {
     }
 
     public static void main(String[] args) {
-        int N = 29;  // numero de rainhas (n=29: 8575 ms)
+        int N = 8;
         QueensParallel solver = new QueensParallel(N);
         solver.solve();
     }

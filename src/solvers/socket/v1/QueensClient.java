@@ -1,11 +1,13 @@
 package solvers.socket.v1;
 
+import solvers.utils.Result;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
-class QueensClient {
+public class QueensClient {
     private int N;
     private String serverAddress;
     private int port;
@@ -17,23 +19,27 @@ class QueensClient {
     }
 
     public void startClient() {
+        long startTime = System.currentTimeMillis(); // Inicia a contagem do tempo do cliente
+
         try (Socket socket = new Socket(serverAddress, port)) {
             System.out.println("Conectado ao servidor...");
 
-            // Recebe o subproblema do servidor
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            int initialRow = (int) in.readObject();
+            int initialRow = (int) in.readObject(); // Recebe o subproblema do servidor
 
-            // Resolve o subproblema
-            List<int[][]> solutions = solveNQueens(initialRow);
+            List<int[][]> solutions = solveNQueens(initialRow); // Resolve o subproblema
 
-            // Envia a solução de volta para o servidor
+            long endTime = System.currentTimeMillis();
+            long executionTime = endTime - startTime; // Tempo de execução do cliente
+
+            System.out.println("Tempo de execução do cliente: " + executionTime + " ms"); // Imprime o tempo de execução do cliente
+
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            out.writeObject(solutions);
-            out.flush();
+            out.writeObject(new Result(solutions, executionTime)); // Envia a solução e o tempo de execução
 
             in.close();
             out.close();
+
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -91,9 +97,10 @@ class QueensClient {
     }
 
     public static void main(String[] args) {
-        int N = 8;  // Exemplo com 8 rainhas
+        int N = 8;  // Número de rainhas
         String serverAddress = "localhost";
         int port = 12345;
+
         QueensClient client = new QueensClient(N, serverAddress, port);
         client.startClient();
     }

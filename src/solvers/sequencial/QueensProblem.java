@@ -1,25 +1,38 @@
 package solvers.sequencial;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class QueensProblem {
     private int N;
-    private List<int[][]> solutions;
+    private int[][] solution;
+    private boolean solutionFound;
 
     public QueensProblem(int N) {
         this.N = N;
-        this.solutions = new ArrayList<>();
+        this.solution = new int[N][N];
+        this.solutionFound = false;
     }
 
-    public void solve() {
+    public long solve() {
         int[][] board = new int[N][N];
+        long startTime = System.currentTimeMillis(); // Inicia a contagem do tempo
+
         solveQueens(board, 0);
+        printSolution();
+        long endTime = System.currentTimeMillis(); // Termina a contagem do tempo
+
+        long executionTime = endTime - startTime; // Calcula o tempo de execução
+
+        System.out.println("Tempo de execução: " + executionTime + " ms");
+        return executionTime;
     }
 
     private boolean solveQueens(int[][] board, int row) {
+        if (solutionFound) {
+            return true; // Se a solução foi encontrada, não continue
+        }
+
         if (row >= N) {
-            solutions.add(copyBoard(board));
+            copyBoard(board, solution);
+            solutionFound = true;
             return true;
         }
 
@@ -28,7 +41,7 @@ public class QueensProblem {
             if (isQueenSafe(board, row, col)) {
                 board[row][col] = 1; // Place queen
 
-                foundSolution |= solveQueens(board, row + 1);
+                foundSolution = solveQueens(board, row + 1) || foundSolution;
 
                 board[row][col] = 0; // Remove queen (backtrack)
             }
@@ -55,40 +68,30 @@ public class QueensProblem {
         return true;
     }
 
-    private int[][] copyBoard(int[][] board) {
-        int[][] newBoard = new int[N][N];
+    private void copyBoard(int[][] source, int[][] destination) {
         for (int i = 0; i < N; i++) {
-            System.arraycopy(board[i], 0, newBoard[i], 0, N);
+            System.arraycopy(source[i], 0, destination[i], 0, N);
         }
-        return newBoard;
     }
 
-    public void printSolutions() {
-        for (int[][] solution : solutions) {
+    public void printSolution() {
+        if (solutionFound) {
+            System.out.println("Solução encontrada:");
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
                     System.out.print(solution[i][j] + " ");
                 }
                 System.out.println();
             }
-            System.out.println();
+        } else {
+            System.out.println("Nenhuma solução encontrada.");
         }
     }
 
     public static void main(String[] args) {
-        int N = 15; // Exemplo com 8 rainhas
+        int N = 8; // Exemplo com 8 rainhas
 
-        long startTime = System.currentTimeMillis(); // Inicia a contagem do tempo
-
-        QueensProblem Queens = new QueensProblem(N);
-        Queens.solve();
-
-        long endTime = System.currentTimeMillis(); // Termina a contagem do tempo
-
-        long executionTime = endTime - startTime; // Calcula o tempo de execução
-
-//        Queens.printSolutions();
-        System.out.println("Tempo de execução: " + executionTime + " ms");
+        QueensProblem queens = new QueensProblem(N);
+        queens.solve();
     }
 }
-

@@ -1,5 +1,10 @@
 package solvers.sequencial;
 
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
 public class QueensProblem {
     private int N;
     private int[][] solution;
@@ -16,12 +21,12 @@ public class QueensProblem {
         long startTime = System.currentTimeMillis(); // Inicia a contagem do tempo
 
         solveQueens(board, 0);
-        printSolution();
         long endTime = System.currentTimeMillis(); // Termina a contagem do tempo
 
         long executionTime = endTime - startTime; // Calcula o tempo de execução
+        printSolution(executionTime);
 
-        System.out.println("Tempo de execução: " + executionTime + " ms");
+
         return executionTime;
     }
 
@@ -74,24 +79,47 @@ public class QueensProblem {
         }
     }
 
-    public void printSolution() {
-        if (solutionFound) {
-            System.out.println("Solução encontrada:");
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < N; j++) {
-                    System.out.print(solution[i][j] + " ");
-                }
-                System.out.println();
-            }
-        } else {
-            System.out.println("Nenhuma solução encontrada.");
+    public void printSolution(long executionTime) {
+//        if (solutionFound) {
+//            System.out.println("Solução encontrada:");
+//            for (int i = 0; i < N; i++) {
+//                for (int j = 0; j < N; j++) {
+//                    System.out.print(solution[i][j] + " ");
+//                }
+//                System.out.println();
+//            }
+//        } else {
+//            System.out.println("Nenhuma solução encontrada.");
+//        }
+        String csvFile = "./sequencial.csv";
+        String line;
+        String delimiter = ",";
+
+        String[][] DATA = {
+                {"Name", "Age", "City"},
+                {"Alice", "30", "New York"},
+                {"Bob", "25", "Los Angeles"},
+                {"Charlie", "35", "Chicago"}
+        };
+
+        String[] row = {"sequencial", String.valueOf(N), String.valueOf(executionTime)};
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile, true))) {
+                writer.write(String.join(",", row));
+                writer.newLine();
+            System.out.println("CSV file created successfully!");
+        } catch (IOException e) {
+            System.err.println("Error writing CSV file: " + e.getMessage());
         }
+        System.out.println("Tempo de execução: " + executionTime + " ms");
+        System.out.println("N:" + N);
     }
 
     public static void main(String[] args) {
-        int N = 8; // Exemplo com 8 rainhas
-
-        QueensProblem queens = new QueensProblem(N);
-        queens.solve();
+        int N = 9; // Exemplo com 8 rainhas
+        for (int i = 8; i < 30; i++) {
+            QueensProblem queens = new QueensProblem(i);
+            queens.solve();
+        }
     }
 }

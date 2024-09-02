@@ -1,9 +1,9 @@
 package solvers.socket.v1;
 
-import solvers.utils.Result;
-
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,42 +19,38 @@ public class QueensClient {
     }
 
     public void startClient() {
-        long startTime = System.currentTimeMillis(); // Inicia a contagem do tempo do cliente
-
         try (Socket socket = new Socket(serverAddress, port)) {
             System.out.println("Conectado ao servidor...");
 
+            // Recebe o subproblema do servidor
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            int initialRow = (int) in.readObject(); // Recebe o subproblema do servidor
+            int initialRow = (int) in.readObject();
 
-            List<int[][]> solutions = solveNQueens(initialRow); // Resolve o subproblema
+            // Resolve o subproblema
+            List<int[][]> solutions = solve(initialRow);
 
-            long endTime = System.currentTimeMillis();
-            long executionTime = endTime - startTime; // Tempo de execução do cliente
-
-            System.out.println("Tempo de execução do cliente: " + executionTime + " ms"); // Imprime o tempo de execução do cliente
-
+            // Envia a solução de volta para o servidor
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            out.writeObject(new Result(solutions, executionTime)); // Envia a solução e o tempo de execução
+            out.writeObject(solutions);
+            out.flush();
 
             in.close();
             out.close();
-
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private List<int[][]> solveNQueens(int initialRow) {
+    private List<int[][]> solve(int initialRow) {
         List<int[][]> solutions = new ArrayList<>();
         int[][] board = new int[N][N];
         board[initialRow][0] = 1;
 
-        solveNQueensUtil(board, 1, solutions);
+        solveQueens(board, 1, solutions);
         return solutions;
     }
 
-    private boolean solveNQueensUtil(int[][] board, int col, List<int[][]> solutions) {
+    private boolean solveQueens(int[][] board, int col, List<int[][]> solutions) {
         if (col >= N) {
             solutions.add(copyBoard(board));
             return true;
@@ -62,10 +58,10 @@ public class QueensClient {
 
         boolean foundSolution = false;
         for (int i = 0; i < N; i++) {
-            if (isSafe(board, i, col)) {
+            if (isQueenSafe(board, i, col)) {
                 board[i][col] = 1;
 
-                foundSolution |= solveNQueensUtil(board, col + 1, solutions);
+                foundSolution |= solveQueens(board, col + 1, solutions);
 
                 board[i][col] = 0;
             }
@@ -73,7 +69,7 @@ public class QueensClient {
         return foundSolution;
     }
 
-    private boolean isSafe(int[][] board, int row, int col) {
+    private boolean isQueenSafe(int[][] board, int row, int col) {
         for (int i = 0; i < col; i++)
             if (board[row][i] == 1)
                 return false;
@@ -100,7 +96,6 @@ public class QueensClient {
         int N = 8;  // Número de rainhas
         String serverAddress = "localhost";
         int port = 12345;
-
         QueensClient client = new QueensClient(N, serverAddress, port);
         client.startClient();
     }

@@ -97,7 +97,7 @@ class QueensClient {
     public static void main(String[] args) {
         int N = 8;  // Exemplo com 8 rainhas
         String serverAddress = "localhost";
-        int port = 12345;
+        int port = 14456;
         QueensClient client = new QueensClient(N, serverAddress, port);
         client.startClient();
     }

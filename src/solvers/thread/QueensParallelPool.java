@@ -7,15 +7,17 @@ import java.util.concurrent.TimeUnit;
 public class QueensParallelPool {
     private int N;
     private ExecutorService executor;
+    private volatile boolean solutionFound; // variável para sinalizar quando a solução é encontrada
 
     public QueensParallelPool(int N) {
         this.N = N;
         this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.solutionFound = false; // inicialmente, nenhuma solução foi encontrada
     }
 
     // metodo define um pool de threads para resolução do problema
     public void solve() {
-        long startTime = System.currentTimeMillis(); // marca o inicio da execução
+        long startTime = System.currentTimeMillis(); // marca o início da execução
 
         for (int i = 0; i < N; i++) {
             submitTask(i);
@@ -38,8 +40,10 @@ public class QueensParallelPool {
             int[][] board = new int[N][N];
             board[initialRow][0] = 1;
 
-            if (solveQueens(board, 1)) {
+            if (solveQueens(board, 1) && !solutionFound) { // verifica se a solução já foi encontrada
                 printSolution(board);
+                solutionFound = true; // sinaliza que a solução foi encontrada
+                executor.shutdownNow(); // interrompe as demais threads
             }
         });
     }
@@ -51,6 +55,8 @@ public class QueensParallelPool {
 
         // tentativa de colocar a rainha em cada linha da coluna atual
         for (int i = 0; i < N; i++) {
+            if (solutionFound) return false; // se a solução foi encontrada, para a execução
+
             if (isQueenSafe(board, i, col)) {
                 board[i][col] = 1;
 
@@ -66,17 +72,17 @@ public class QueensParallelPool {
     // verifica se a casa do board é segura para colocar uma rainha,
     // recebe o board e as cordenadas da casa como parametros
     private boolean isQueenSafe(int board[][], int row, int col) {
-        // verifica a se a linha é segura
+        // verifica se a linha é segura
         for (int i = 0; i < col; i++)
             if (board[row][i] == 1)
                 return false;
 
-        // verifica a se a diagonal superior é segura
+        // verifica se a diagonal superior é segura
         for (int i = row, j = col; i >= 0 && j >= 0; i--, j--)
             if (board[i][j] == 1)
                 return false;
 
-        // verifica a se a diagonal inferior é segura
+        // verifica se a diagonal inferior é segura
         for (int i = row, j = col; j >= 0 && i < N; i++, j--)
             if (board[i][j] == 1)
                 return false;
@@ -96,7 +102,7 @@ public class QueensParallelPool {
     }
 
     public static void main(String[] args) {
-        int N = 29;  // numero de rainhas (n=29: 8286 ms)
+        int N = 8;  // número de rainhas
         QueensParallelPool solver = new QueensParallelPool(N);
         solver.solve();
     }

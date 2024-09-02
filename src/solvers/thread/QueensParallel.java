@@ -1,5 +1,8 @@
 package solvers.thread;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,7 +39,6 @@ public class QueensParallel {
                 if (solveQueens(board, 1)) {
                     if (solutionFound.compareAndSet(false, true)) {
                         copyBoard(board, solution);
-                        printSolution(solution);
                     }
                 }
                 latch.countDown(); // decrementa o latch ao terminar a thread
@@ -50,6 +52,10 @@ public class QueensParallel {
         }
 
         long endTime = System.currentTimeMillis();
+        long executionTime = endTime - startTime; // Calcula o tempo de execução
+
+        printSolution(executionTime);
+
         System.out.println("Tempo total de execução: " + (endTime - startTime) + " ms");
     }
 
@@ -118,9 +124,36 @@ public class QueensParallel {
         }
     }
 
+    private void printSolution(long executionTime) {
+        String csvFile = "./parallel.csv";
+        String line;
+        String delimiter = ",";
+
+        String[][] DATA = {
+                {"Name", "Age", "City"},
+                {"Alice", "30", "New York"},
+                {"Bob", "25", "Los Angeles"},
+                {"Charlie", "35", "Chicago"}
+        };
+
+        String[] row = {"parallel", String.valueOf(N), String.valueOf(executionTime)};
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile, true))) {
+            writer.write(String.join(",", row));
+            writer.newLine();
+            System.out.println("CSV file created successfully!");
+        } catch (IOException e) {
+            System.err.println("Error writing CSV file: " + e.getMessage());
+        }
+        System.out.println("Tempo de execução: " + executionTime + " ms");
+        System.out.println("N:" + N);
+    }
+
     public static void main(String[] args) {
-        int N = 8;
-        QueensParallel solver = new QueensParallel(N);
+        int N = 30;
+        for (int i = 8; i < 30; i++) {
+        QueensParallel solver = new QueensParallel(i);
         solver.solve();
+        }
     }
 }

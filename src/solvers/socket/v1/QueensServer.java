@@ -1,18 +1,19 @@
 package solvers.socket.v1;
 
-import solvers.utils.Result;
 
-import java.io.*;
-import java.net.*;
-import java.util.concurrent.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QueensServer {
     private int N;
     private int port;
     private AtomicBoolean solutionFound = new AtomicBoolean(false);
-    private long totalClientExecutionTime = 0; // Tempo total de execução dos clientes
-    private long serverStartTime;
+    private long startTime;
 
     public QueensServer(int N, int port) {
         this.N = N;
@@ -20,58 +21,37 @@ public class QueensServer {
     }
 
     public void startServer() {
-        serverStartTime = System.currentTimeMillis(); // Inicia a contagem do tempo do servidor
-
-        ExecutorService executor = Executors.newFixedThreadPool(N);
-
+        startTime = System.currentTimeMillis(); // Inicia a contagem do tempo
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Servidor iniciado e aguardando conexões...");
 
             for (int i = 0; i < N; i++) {
-                final int row = i;
-                executor.submit(() -> handleClientConnection(serverSocket, row));
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
 
-                if (solutionFound.get()) {
-                    break;
+                // Envia o subproblema para o cliente
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                out.writeObject(i);
+                out.flush();
+
+                // Recebe a solução do cliente
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                List<int[][]> clientSolutions = (List<int[][]>) in.readObject();
+
+                if (!solutionFound.get() && !clientSolutions.isEmpty()) {
+                    solutionFound.set(true);
+                    printSolution(clientSolutions.get(0));
+                    break; // Interrompe a aceitação de novos clientes
                 }
+
+                in.close();
+                out.close();
+                clientSocket.close();
             }
 
-            executor.shutdown();
-            executor.awaitTermination(1, TimeUnit.MINUTES);
-
-            long serverEndTime = System.currentTimeMillis(); // Tempo total de execução do servidor
-            long totalTime = serverEndTime - serverStartTime; // Tempo total de execução (server + clients)
-
-            System.out.println("Tempo total de execução do servidor: " + (totalTime - totalClientExecutionTime) + " ms");
-            System.out.println("Tempo total de execução dos clientes: " + totalClientExecutionTime + " ms");
-            System.out.println("Tempo total de execução (servidor + clientes): " + totalTime + " ms");
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void handleClientConnection(ServerSocket serverSocket, int initialRow) {
-        try (Socket clientSocket = serverSocket.accept()) {
-            System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
-
-            ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-            out.writeObject(initialRow); // Envia o subproblema para o cliente
-
-            ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-            Result result = (Result) in.readObject(); // Recebe a solução e tempo de execução
-
-            totalClientExecutionTime += result.getExecutionTime(); // Soma o tempo de execução do cliente
-
-            if (!solutionFound.get() && result.hasSolution()) {
-                solutionFound.set(true);
-                printSolution(result.getSolution());
-            }
-
-            in.close();
-            out.close();
-            clientSocket.close();
-
+            // Calcula e exibe o tempo total de execução
+            long endTime = System.currentTimeMillis();
+            System.out.println("Tempo total de execução: " + (endTime - startTime) + " ms");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -79,9 +59,9 @@ public class QueensServer {
 
     private void printSolution(int[][] solution) {
         System.out.println("Solução encontrada:");
-        for (int[] row : solution) {
-            for (int cell : row) {
-                System.out.print(cell + " ");
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                System.out.print(solution[i][j] + " ");
             }
             System.out.println();
         }

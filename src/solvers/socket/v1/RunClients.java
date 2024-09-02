@@ -18,7 +18,7 @@ public class RunClients {
 
         for (int i = 0; i < numberOfClients; i++) {
             clientThreads[i] = new Thread(() -> {
-                QueensClient client = new QueensClient(N, serverAddress, port);
+                QueensClient client = new QueensClient(serverAddress, port);
                 client.startClient();
             });
             clientThreads[i].start();
@@ -38,7 +38,7 @@ public class RunClients {
     public static void main(String[] args) {
         int N = 8;  // Número de rainhas
         String serverAddress = "localhost";
-        int port = 12345;
+        int port = 14456;
         int numberOfClients = 4;  // Número de clientes que serão executados em paralelo
 
         RunClients executor = new RunClients(N, serverAddress, port, numberOfClients);

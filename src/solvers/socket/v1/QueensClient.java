@@ -8,12 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QueensClient {
-    private int N;
+
     private String serverAddress;
     private int port;
 
-    public QueensClient(int N, String serverAddress, int port) {
-        this.N = N;
+    public QueensClient(String serverAddress, int port) {
         this.serverAddress = serverAddress;
         this.port = port;
     }
@@ -22,18 +21,38 @@ public class QueensClient {
         try (Socket socket = new Socket(serverAddress, port)) {
             System.out.println("Conectado ao servidor...");
 
-            // Recebe o subproblema do servidor
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            int initialRow = (int) in.readObject();
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());     
 
-            // Resolve o subproblema
-            List<int[][]> solutions = solve(initialRow);
-
-            // Envia a solução de volta para o servidor
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            out.writeObject(solutions);
             out.flush();
 
+            out.writeObject(8); // Envia o valor de N
+
+            // Recebe o valor de N e a linha inicial do subproblema do servidor
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            int N = (int) in.readObject();
+            int initialRow = (int) in.readObject();
+
+            System.out.println("Recebido subproblema: N = " + N + ", linha inicial = " + initialRow);
+
+            Soluction soluction = new Soluction();
+
+ 
+            // Inicia a contagem do tempo
+            soluction.startTime = System.currentTimeMillis();
+
+            // Resolve o subproblema
+            List<int[][]> solutions = solve(N, initialRow);
+
+            // Finaliza a contagem do tempo
+            soluction.endTime = System.currentTimeMillis();
+
+            soluction.soluctions = solutions;
+
+            // Envia a solução de volta para o servidor
+            out.writeObject(soluction);
+            out.flush();
+
+            // Fecha streams e socket
             in.close();
             out.close();
         } catch (IOException | ClassNotFoundException e) {
@@ -41,27 +60,27 @@ public class QueensClient {
         }
     }
 
-    private List<int[][]> solve(int initialRow) {
+    private List<int[][]> solve(int N, int initialRow) {
         List<int[][]> solutions = new ArrayList<>();
         int[][] board = new int[N][N];
         board[initialRow][0] = 1;
 
-        solveQueens(board, 1, solutions);
+        solveQueens(N, board, 1, solutions);
         return solutions;
     }
 
-    private boolean solveQueens(int[][] board, int col, List<int[][]> solutions) {
+    private boolean solveQueens(int N, int[][] board, int col, List<int[][]> solutions) {
         if (col >= N) {
-            solutions.add(copyBoard(board));
+            solutions.add(copyBoard(N, board));
             return true;
         }
 
         boolean foundSolution = false;
         for (int i = 0; i < N; i++) {
-            if (isQueenSafe(board, i, col)) {
+            if (isQueenSafe(N, board, i, col)) {
                 board[i][col] = 1;
 
-                foundSolution |= solveQueens(board, col + 1, solutions);
+                foundSolution |= solveQueens(N, board, col + 1, solutions);
 
                 board[i][col] = 0;
             }
@@ -69,34 +88,41 @@ public class QueensClient {
         return foundSolution;
     }
 
-    private boolean isQueenSafe(int[][] board, int row, int col) {
-        for (int i = 0; i < col; i++)
-            if (board[row][i] == 1)
+    private boolean isQueenSafe(int N, int[][] board, int row, int col) {
+        for (int i = 0; i < col; i++) {
+            if (board[row][i] == 1) {
                 return false;
+            }
+        }
 
-        for (int i = row, j = col; i >= 0 && j >= 0; i--, j--)
-            if (board[i][j] == 1)
+        for (int i = row, j = col; i >= 0 && j >= 0; i--, j--) {
+            if (board[i][j] == 1) {
                 return false;
+            }
+        }
 
-        for (int i = row, j = col; j >= 0 && i < N; i++, j--)
-            if (board[i][j] == 1)
+        for (int i = row, j = col; j >= 0 && i < N; i++, j--) {
+            if (board[i][j] == 1) {
                 return false;
+            }
+        }
 
         return true;
     }
 
-    private int[][] copyBoard(int[][] board) {
+    private int[][] copyBoard(int N, int[][] board) {
         int[][] newBoard = new int[N][N];
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i < N; i++) {
             System.arraycopy(board[i], 0, newBoard[i], 0, N);
+        }
         return newBoard;
     }
 
     public static void main(String[] args) {
         int N = 8;  // Número de rainhas
         String serverAddress = "localhost";
-        int port = 12345;
-        QueensClient client = new QueensClient(N, serverAddress, port);
+        int port = 14456;
+        QueensClient client = new QueensClient(serverAddress, port);
         client.startClient();
     }
 }

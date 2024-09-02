@@ -81,7 +81,7 @@ class QueensServer {
 
     public static void main(String[] args) {
         int N = 8;  // Exemplo com 8 rainhas
-        int port = 12345;
+        int port = 14456;
         QueensServer server = new QueensServer(N, port);
         server.startServer();
     }

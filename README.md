@@ -1,4 +1,4 @@
-#Integrantes do grupo:
+# Integrantes do grupo:
   - Gabriel Barbosa Silva - 2211114
   - Guilherme Antunes Gonçalves dos Santos - 2142589
   - Nathalia Naomi Curiaki Graciola - 2100690

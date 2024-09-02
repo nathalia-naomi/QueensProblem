@@ -1,3 +1,11 @@
+#Integrantes do grupo:
+  - Gabriel Barbosa Silva - 2211114
+  - Guilherme Antunes Gonçalves dos Santos - 2142589
+  - Nathalia Naomi Curiaki Graciola - 2100690
+  - Otávio Barbosa Ferreira - 2211211
+  - Tiago André dos Santos Sousa - 2348179
+  - Vitor Elias Nakagawa Leme - 2348209 
+
 Trabalho Prático
 
 Problema de N Rainhas de forma Paralela ou Distribuída

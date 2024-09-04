@@ -28,7 +28,7 @@ public class QueensParallel {
         for (int i = 0; i < N; i++) {
             final int row = i;
             new Thread(() -> {
-                if (solutionFound.get()) {
+                if (solutionFound.get()) { // se a solução for encontrada, não continue
                     latch.countDown();
                     return;
                 }
@@ -52,9 +52,9 @@ public class QueensParallel {
         }
 
         long endTime = System.currentTimeMillis();
-        long executionTime = endTime - startTime; // Calcula o tempo de execução
-
-        printSolution(executionTime);
+        long executionTime = endTime - startTime; // calcula o tempo de execução
+        printSolution(solution);
+//        printSolution(executionTime);
 
         System.out.println("Tempo total de execução: " + (endTime - startTime) + " ms");
     }
@@ -62,7 +62,7 @@ public class QueensParallel {
     // metodo para resolver o problema de N Rainhas usando backtracking
     private boolean solveQueens(int[][] board, int col) {
         if (solutionFound.get()) {
-            return true; // Se a solução foi encontrada, não continue
+            return true; // se a solução foi encontrada, não continue
         }
 
         if (col >= N) // verifica se todas as rainhas foram colocadas
@@ -124,18 +124,9 @@ public class QueensParallel {
         }
     }
 
+    // escreve o valor de N e o tempo de execução em um arquivo csv
     private void printSolution(long executionTime) {
-        String csvFile = "./parallel.csv";
-        String line;
-        String delimiter = ",";
-
-        String[][] DATA = {
-                {"Name", "Age", "City"},
-                {"Alice", "30", "New York"},
-                {"Bob", "25", "Los Angeles"},
-                {"Charlie", "35", "Chicago"}
-        };
-
+        String csvFile = "./parallel100.csv";
         String[] row = {"parallel", String.valueOf(N), String.valueOf(executionTime)};
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile, true))) {
@@ -150,10 +141,8 @@ public class QueensParallel {
     }
 
     public static void main(String[] args) {
-        int N = 30;
-        for (int i = 8; i < 30; i++) {
-        QueensParallel solver = new QueensParallel(i);
+        int N = 8;
+        QueensParallel solver = new QueensParallel(N);
         solver.solve();
-        }
     }
 }
